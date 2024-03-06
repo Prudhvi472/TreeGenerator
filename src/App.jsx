@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import Tree from "react-d3-tree";
 import { useCenteredTree } from "./helpers";
 import "./styles.css";
-import mockedData from "../src/data/names.json"; // Assuming "names.json" contains the mock data
+import mockedData from "../src/data/names.json";
 
 const containerStyles = {
   position: "relative",
@@ -27,15 +27,24 @@ const buttonStyles = {
 };
 
 const orgChartJson = {
-  name: "CEO",
+  name: "Human",
+  rules: "Living",
   children: [
     {
-      name: "Manager",
-      children: [],
+      name: "Young",
+      rules: "Age<50",
+      children: [
+        { name: "infant", children: [], rules: "Age<1" },
+        { name: "teenager", children: [], rules: "Age<18" },
+      ],
     },
     {
-      name: "Manager",
-      children: [],
+      name: "Old",
+      rules: "Age>50",
+      children: [
+        { name: "Middle Age", children: [], rules: "Age>30" },
+        { name: "Adult", children: [], rules: "Age>18 & Age<30" },
+      ],
     },
   ],
 };
@@ -56,8 +65,25 @@ const mockFetch = () => {
       resolve({
         json: () => Promise.resolve(mockedData),
       });
-    }, 1000); // Simulate a delay
+    }, 1000);
   });
+};
+
+const gatherLeafNodeRules = (node, parentRules = [], leafNodes = {}) => {
+  if (node.children && node.children.length > 0) {
+    // Non-leaf node
+    const updatedParentRules = node.rules
+      ? [...parentRules, node.rules]
+      : parentRules;
+    node.children.forEach((child) =>
+      gatherLeafNodeRules(child, updatedParentRules, leafNodes)
+    );
+  } else {
+    // Leaf node
+    const leafNodeRules = parentRules.concat(node.rules || []);
+    leafNodes[node.name] = leafNodeRules;
+  }
+  return leafNodes;
 };
 
 export default function App() {
@@ -67,11 +93,13 @@ export default function App() {
 
   const onNodeClick = (nodeData) => {
     const newNodeName = prompt("Enter the name for the new child node:");
+    const newRules = prompt("Enter rules for the node (optional):");
 
-    if (newNodeName) {
+    if (newNodeName !== null) {
       const newChild = {
         name: newNodeName,
         children: [],
+        rules: newRules || undefined,
       };
 
       const updatedTreeData = { ...prevTreeDataRef.current };
@@ -108,21 +136,21 @@ export default function App() {
       };
 
       findAndAddChild(updatedTreeData, null, targetNodeName, targetAttributes);
-
+      console.log(updatedTreeData);
       setTreeData(updatedTreeData);
+      const leafNodesWithRules = gatherLeafNodeRules(treeData);
+      console.log(leafNodesWithRules);
       prevTreeDataRef.current = updatedTreeData;
     }
   };
 
   const sendTreeData = async () => {
     try {
-      // Simulate fetching data from the mocked endpoint
       const response = await mockFetch();
       const data = await response.json();
 
       console.log("Data sent successfully:", data);
 
-      // Assuming the response data contains the updated tree structure
       if (data) {
         console.log(data);
         setTreeData(data);
@@ -143,7 +171,7 @@ export default function App() {
       />
 
       <button style={buttonStyles} onClick={sendTreeData}>
-        Send Tree Data
+        Explain Tree
       </button>
     </div>
   );
