@@ -27,23 +27,116 @@ const buttonStyles = {
 };
 
 const orgChartJson = {
-  name: "Human",
-  rules: "Living",
+  name: "Feature1 = 1",
   children: [
     {
-      name: "Young",
-      rules: "Age<50",
+      name: "Feature2 < 550",
       children: [
-        { name: "infant", children: [], rules: "Age<1" },
-        { name: "teenager", children: [], rules: "Age<18" },
+        {
+          name: "Feature3 < 11",
+          children: [
+            {
+              name: "Policy Rule 1",
+            },
+          ],
+        },
+        {
+          name: "Feature3 >= 11 and Feature3 <= 9990",
+          children: [
+            {
+              name: "Policy Rule 2",
+            },
+          ],
+        },
+        {
+          name: "Feature3 > 9990 and Feature3 <= 9999",
+          children: [
+            {
+              name: "Feature4 < 100",
+              children: [
+                {
+                  name: "Policy Rule 3",
+                },
+              ],
+            },
+            {
+              name: "Feature4 >= 100 and Feature4 <= 990",
+              children: [
+                {
+                  name: "Policy Rule 4",
+                },
+              ],
+            },
+            {
+              name: "Feature4 > 990 and Feature4 <= 999",
+              children: [
+                {
+                  name: "Policy Rule 5",
+                },
+              ],
+            },
+          ],
+        },
       ],
     },
     {
-      name: "Old",
-      rules: "Age>50",
+      name: "Feature2 >= 550 and Feature2 < 630",
       children: [
-        { name: "Middle Age", children: [], rules: "Age>30" },
-        { name: "Adult", children: [], rules: "Age>18 & Age<30" },
+        {
+          name: "Feature3 < 10",
+          children: [
+            {
+              name: "Policy Rule 6",
+            },
+          ],
+        },
+        {
+          name: "Feature3 >= 10 and Feature3 <= 9990",
+          children: [
+            {
+              name: "Feature5 < 2",
+              children: [
+                {
+                  name: "Feature6 < 20",
+                  children: [
+                    {
+                      name: "Policy Rule 7",
+                    },
+                  ],
+                },
+                {
+                  name: "Feature6 >= 20 and Feature6 < 45",
+                  children: [
+                    {
+                      name: "Policy Rule 8",
+                    },
+                  ],
+                },
+                {
+                  name: "Feature6 >= 45 and Feature6 <= 990",
+                  children: [
+                    {
+                      name: "Policy Rule 9",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              name: "Feature5 >= 2 and Feature5 <= 90",
+              children: [
+                {
+                  name: "Feature7 < 60",
+                  children: [
+                  {
+                    name: "Policy Rule 10",
+                  },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],
