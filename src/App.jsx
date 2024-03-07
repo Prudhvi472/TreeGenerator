@@ -57,7 +57,7 @@ const SelectgStyles = {
 const bottomContainerStyles = {
   display: "flex",
   flexDirection: "row",
-  justifyContent: "space-between",
+  justifyContent: "space-evenly",
   alignItems: "center",
   width: "100%",
 };
@@ -359,8 +359,9 @@ export default function App() {
       />
 
       <div style={bottomContainerStyles}>
+        <div style={{display : "flex" , flexDirection:"row"}}>
         <Select
-          // styles={SelectStyles}
+          styles={{margin : "2px"}}
           onChange={handleLeafNodeSelect}
           options={options}
           placeholder="Select a leaf node"
@@ -369,6 +370,7 @@ export default function App() {
         <button style={buttonStyles} onClick={sendTreeData}>
           Explain Tree
         </button>
+        </div>
         <div style={modifiedBoxStyles}>
           Selected Node Rules:
           {selectedNodeRules ? (
