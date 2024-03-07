@@ -1,6 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import Select from "react-select"; // Install "react-select" package
+
 import Tree from "react-d3-tree";
-import { useCenteredTree } from "./helpers";
+import { useCenteredTree } from "./helpers"; // Assuming this helper component exists
 import "./styles.css";
 import mockedData from "../src/data/names.json";
 
@@ -14,10 +16,27 @@ const containerStyles = {
   alignItems: "center",
 };
 
+const boxStyles = {
+  // position: "fixed",
+  // bottom: "20px",
+  // left: "20px",
+  backgroundColor: "white",
+  margin: "10px",
+  padding: "10px",
+  border: "1px solid #ccc",
+  width: "200px",
+};
+
+const modifiedBoxStyles = {
+  ...boxStyles, // Inherit styles from boxStyles
+  minWidth: "200px", // Set minimum width to ensure content fits
+  marginRight: "10px", // Add margin for spacing between boxes
+};
+
 const buttonStyles = {
-  position: "fixed",
-  bottom: "20px",
-  left: "20px",
+  // position: "fixed",
+  // bottom: "20px",
+  // left: "calc(20px + 200px)", // Adjust left position based on the width of the fixed boxes
   backgroundColor: "#AD2C92",
   color: "#F2F2F2",
   padding: "10px",
@@ -26,52 +45,82 @@ const buttonStyles = {
   cursor: "pointer",
 };
 
+const SelectgStyles = {
+  // Adjust left position based on the width of the fixed boxes and the button
+  padding: "80px",
+  border: "none",
+  borderRadius: "5px",
+  margin: "10px",
+  width: "200px",
+};
+
+const bottomContainerStyles = {
+  display: "flex",
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  width: "100%",
+};
+
 const orgChartJson = {
   name: "Feature1 = 1",
+  rules: "Feature1 = 1",
   children: [
     {
       name: "Feature2 < 550",
+      rules: "Feature2 < 550",
       children: [
         {
           name: "Feature3 < 11",
+          rules: "Feature3 < 11",
           children: [
             {
               name: "Policy Rule 1",
+              rules: "Policy Rule 1",
             },
           ],
         },
         {
           name: "Feature3 >= 11 and Feature3 <= 9990",
+          rules: "Feature3 >= 11 and Feature3 <= 9990",
           children: [
             {
               name: "Policy Rule 2",
+              rules: "Policy Rule 2",
             },
           ],
         },
         {
           name: "Feature3 > 9990 and Feature3 <= 9999",
+          rules: "Feature3 > 9990 and Feature3 <= 9999",
           children: [
             {
               name: "Feature4 < 100",
+              rules: "Feature4 < 100",
               children: [
                 {
                   name: "Policy Rule 3",
+                  rules: "Policy Rule 3",
                 },
               ],
             },
             {
               name: "Feature4 >= 100 and Feature4 <= 990",
+              rules: "Feature4 >= 100 and Feature4 <= 990",
               children: [
                 {
                   name: "Policy Rule 4",
+                  rules: "Policy Rule 4",
                 },
               ],
             },
             {
               name: "Feature4 > 990 and Feature4 <= 999",
+              rules: "Feature4 > 990 and Feature4 <= 999",
               children: [
                 {
                   name: "Policy Rule 5",
+                  rules: "Policy Rule 5",
                 },
               ],
             },
@@ -81,42 +130,53 @@ const orgChartJson = {
     },
     {
       name: "Feature2 >= 550 and Feature2 < 630",
+      rules: "Feature2 >= 550 and Feature2 < 630",
       children: [
         {
           name: "Feature3 < 10",
+          rules: "Feature3 < 10",
           children: [
             {
               name: "Policy Rule 6",
+              rules: "Policy Rule 6",
             },
           ],
         },
         {
           name: "Feature3 >= 10 and Feature3 <= 9990",
+          rules: "Feature3 >= 10 and Feature3 <= 9990",
           children: [
             {
               name: "Feature5 < 2",
+              rules: "Feature5 < 2",
               children: [
                 {
                   name: "Feature6 < 20",
+                  rules: "Feature6 < 20",
                   children: [
                     {
                       name: "Policy Rule 7",
+                      rules: "Policy Rule 7",
                     },
                   ],
                 },
                 {
                   name: "Feature6 >= 20 and Feature6 < 45",
+                  rules: "Feature6 >= 20 and Feature6 < 45",
                   children: [
                     {
                       name: "Policy Rule 8",
+                      rules: "Policy Rule 8",
                     },
                   ],
                 },
                 {
                   name: "Feature6 >= 45 and Feature6 <= 990",
+                  rules: "Feature6 >= 45 and Feature6 <= 990",
                   children: [
                     {
                       name: "Policy Rule 9",
+                      rules: "Policy Rule 9",
                     },
                   ],
                 },
@@ -124,13 +184,16 @@ const orgChartJson = {
             },
             {
               name: "Feature5 >= 2 and Feature5 <= 90",
+              rules: "Feature5 >= 2 and Feature5 <= 90",
               children: [
                 {
                   name: "Feature7 < 60",
+                  rules: "Feature7 < 60",
                   children: [
-                  {
-                    name: "Policy Rule 10",
-                  },
+                    {
+                      name: "Policy Rule 10",
+                      rules: "Policy Rule 10",
+                    },
                   ],
                 },
               ],
@@ -148,6 +211,11 @@ const renderRectSvgNode = ({ nodeDatum, onNodeClick }) => (
     <text fill="#068BBF" strokeWidth="1" x="20">
       {nodeDatum.name}
     </text>
+    {nodeDatum.rules && (
+      <text fill="black" x="20" dy="20" strokeWidth="1">
+        Rule :{nodeDatum.rules}
+      </text>
+    )}
   </g>
 );
 
@@ -183,6 +251,24 @@ export default function App() {
   const [treeData, setTreeData] = useState(orgChartJson);
   const [translate, containerRef] = useCenteredTree();
   const prevTreeDataRef = useRef(treeData);
+  const [selectedLeafNode, setSelectedLeafNode] = useState(null);
+  const [apiOutput, setApiOutput] = useState("");
+  const leafNodesWithRules = gatherLeafNodeRules(treeData);
+  const [selectedNodeRules, setSelectedNodeRules] = useState(null);
+
+  useEffect(() => {
+    // Gather leaf nodes on initial render and data changes
+    const leafNodes = gatherLeafNodeRules(treeData);
+    setSelectedLeafNode(leafNodes[Object.keys(leafNodes)[0]]); // Select first leaf node by default
+    const options = Object.keys(leafNodes).map((name) => ({
+      value: name,
+      label: name,
+    }));
+    setOptions(options); // Update options state
+    return () => {}; // Cleanup function (optional)
+  }, [treeData]);
+
+  const [options, setOptions] = useState([]);
 
   const onNodeClick = (nodeData) => {
     const newNodeName = prompt("Enter the name for the new child node:");
@@ -239,6 +325,8 @@ export default function App() {
 
   const sendTreeData = async () => {
     try {
+      const leafNodesWithRules = gatherLeafNodeRules(treeData);
+      console.log(leafNodesWithRules);
       const response = await mockFetch();
       const data = await response.json();
 
@@ -246,11 +334,17 @@ export default function App() {
 
       if (data) {
         console.log(data);
+        setApiOutput(data); // Set the API output string
         setTreeData(data);
       }
     } catch (error) {
       console.error("Error sending data:", error);
     }
+  };
+
+  const handleLeafNodeSelect = (selectedOption) => {
+    const selectedNodeName = selectedOption.value;
+    setSelectedNodeRules(leafNodesWithRules[selectedNodeName] || null);
   };
 
   return (
@@ -261,11 +355,36 @@ export default function App() {
         renderCustomNodeElement={renderRectSvgNode}
         orientation="vertical"
         onNodeClick={onNodeClick}
+        separation={{ siblings: 2, nonSiblings: 2.5 }}
       />
 
-      <button style={buttonStyles} onClick={sendTreeData}>
-        Explain Tree
-      </button>
+      <div style={bottomContainerStyles}>
+        <Select
+          // styles={SelectStyles}
+          onChange={handleLeafNodeSelect}
+          options={options}
+          placeholder="Select a leaf node"
+          menuPlacement="top"
+        />
+        <button style={buttonStyles} onClick={sendTreeData}>
+          Explain Tree
+        </button>
+        <div style={modifiedBoxStyles}>
+          Selected Node Rules:
+          {selectedNodeRules ? (
+            <ul>
+              {selectedNodeRules.map((rule, index) => (
+                <li key={index}>{rule}</li>
+              ))}
+            </ul>
+          ) : (
+            "No rules selected"
+          )}
+        </div>
+        <div style={modifiedBoxStyles}>
+          <p>API Output (string below 50 characters):</p>
+        </div>
+      </div>
     </div>
   );
 }
